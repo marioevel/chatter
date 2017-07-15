@@ -64,7 +64,7 @@
 				        	<li>
 				        		<a class="discussion_list" href="/{{ Config::get('chatter.routes.home') }}/{{ $discussion->category->slug }}/{{ $discussion->slug }}">
 					        		<div class="chatter_avatar">
-					        			@if(Config::get('chatter.user.avatar_image_database_field'))
+					        			@if(Config::get('chatter.user.avatar_image_database_field') && $discussion->user->pic)
 
 					        				<?php $db_field = Config::get('chatter.user.avatar_image_database_field');?>
 
@@ -74,7 +74,9 @@
 					        				@else
 					        					<img src="{{ Config::get('chatter.user.relative_url_to_image_assets') . $discussion->user->{$db_field}  }}">
 					        				@endif
-
+										@elseif(!$discussion->user->pic)
+										    <img src="{!! asset('assets/img/default/default_user.png') !!} " width="25"
+										         class="img-circle" alt="riot">
 					        			@else
 
 					        				<span class="chatter_avatar_circle" style="background-color:#<?=\DevDojo\Chatter\Helpers\ChatterHelper::stringToColorCode($discussion->user->email)?>">

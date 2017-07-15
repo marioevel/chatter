@@ -3,7 +3,9 @@
 @section(Config::get('chatter.yields.head'))
 	<link href="/vendor/devdojo/chatter/assets/css/chatter.css" rel="stylesheet">
 @stop
-
+@section('title')
+	{{ $discussion->title }}
+@stop
 
 @section('content')
 
@@ -38,14 +40,14 @@
 		        </ul>
 		    </div>
 	    </div>
-	@endif	
+	@endif
 
 	<div class="container margin-top">
-		
+
 	    <div class="row">
 
 	        <div class="col-md-12">
-					
+
 				<div class="conversation">
 	                <ul class="discussions no-bg" style="display:block;">
 	                	@foreach($posts as $post)
@@ -67,19 +69,21 @@
 			                			</div>
 			                		@endif
 			                		<div class="chatter_avatar">
-					        			@if(Config::get('chatter.user.avatar_image_database_field'))
-					        				
-					        				<?php $db_field = Config::get('chatter.user.avatar_image_database_field'); ?>
-					        				
-					        				<!-- If the user db field contains http:// or https:// we don't need to use the relative path to the image assets -->
-					        				@if( (substr($post->user->{$db_field}, 0, 7) == 'http://') || (substr($post->user->{$db_field}, 0, 8) == 'https://') )
-					        					<img src="{{ $post->user->{$db_field}  }}">
-					        				@else
-					        					<img src="{{ Config::get('chatter.user.relative_url_to_image_assets') . $post->user->{$db_field}  }}">
-					        				@endif
+	    			        			@if(Config::get('chatter.user.avatar_image_database_field') && $discussion->user->pic)
 
+	    			        				<?php $db_field = Config::get('chatter.user.avatar_image_database_field');?>
+
+	    			        				<!-- If the user db field contains http:// or https:// we don't need to use the relative path to the image assets -->
+	    			        				@if( (substr($post->user->{$db_field}, 0, 7) == 'http://') || (substr($post->user->{$db_field}, 0, 8) == 'https://') )
+	    			        					<img src="{{ $post->user->{$db_field}  }}">
+	    			        				@else
+	    			        					<img src="{{ Config::get('chatter.user.relative_url_to_image_assets') . $post->user->{$db_field}  }}">
+	    			        				@endif
+	    								@elseif(!$discussion->user->pic)
+	    								    <img src="{!! asset('assets/img/default/default_user.png') !!} " width="25"
+	    								         class="img-circle" alt="riot">
 					        			@else
-					        				<span class="chatter_avatar_circle" style="background-color:#<?= \DevDojo\Chatter\Helpers\ChatterHelper::stringToColorCode($post->user->email) ?>">
+					        				<span class="chatter_avatar_circle" style="background-color:#<?=\DevDojo\Chatter\Helpers\ChatterHelper::stringToColorCode($post->user->email)?>">
 					        					{{ ucfirst(substr($post->user->email, 0, 1)) }}
 					        				</span>
 					        			@endif
@@ -87,7 +91,7 @@
 
 					        		<div class="chatter_middle">
 					        			<span class="chatter_middle_details"><a href="{{ \DevDojo\Chatter\Helpers\ChatterHelper::userLink($post->user) }}">{{ ucfirst($post->user->{Config::get('chatter.user.database_field_with_user_name')}) }}</a> <span class="ago chatter_middle_details">{{ \Carbon\Carbon::createFromTimeStamp(strtotime($post->created_at))->diffForHumans() }}</span></span>
-					        			<div class="chatter_body"><?= $post->body ?></div>
+					        			<div class="chatter_body"><?=$post->body?></div>
 					        		</div>
 
 					        		<div class="chatter_clear"></div>
@@ -95,7 +99,7 @@
 		                	</li>
 	                	@endforeach
 
-	           
+
 	                </ul>
 	            </div>
 
@@ -104,26 +108,28 @@
 	            	<div id="new_response">
 
 	            		<div class="chatter_avatar">
-		        			@if(Config::get('chatter.user.avatar_image_database_field'))
+		        			@if(Config::get('chatter.user.avatar_image_database_field') && $discussion->user->pic)
 
-		        				<?php $db_field = Config::get('chatter.user.avatar_image_database_field'); ?>
-					        				
+		        				<?php $db_field = Config::get('chatter.user.avatar_image_database_field');?>
+
 		        				<!-- If the user db field contains http:// or https:// we don't need to use the relative path to the image assets -->
 		        				@if( (substr(Sentinel::getUser()->{$db_field}, 0, 7) == 'http://') || (substr(Sentinel::getUser()->{$db_field}, 0, 8) == 'https://') )
 		        					<img src="{{ Sentinel::getUser()->{$db_field}  }}">
 		        				@else
 		        					<img src="{{ Config::get('chatter.user.relative_url_to_image_assets') . Sentinel::getUser()->{$db_field}  }}">
 		        				@endif
-
+							@elseif(!$discussion->user->pic)
+	    								    <img src="{!! asset('assets/img/default/default_user.png') !!} " width="25"
+	    								         class="img-circle" alt="riot">
 		        			@else
-		        				<span class="chatter_avatar_circle" style="background-color:#<?= \DevDojo\Chatter\Helpers\ChatterHelper::stringToColorCode(Sentinel::getUser()->email) ?>">
+		        				<span class="chatter_avatar_circle" style="background-color:#<?=\DevDojo\Chatter\Helpers\ChatterHelper::stringToColorCode(Sentinel::getUser()->email)?>">
 		        					{{ strtoupper(substr(Sentinel::getUser()->email, 0, 1)) }}
 		        				</span>
 		        			@endif
 		        		</div>
 
 			            <div id="new_discussion">
-			        	
+
 
 					    	<div class="chatter_loader dark" id="new_discussion_loader">
 							    <div></div>
@@ -196,11 +202,11 @@
 			container = parent.find('.chatter_middle');
 			body = container.find('.chatter_body');
 			details = container.find('.chatter_middle_details');
-			
+
 			// dynamically create a new text area
 			container.prepend('<textarea id="post-edit-' + id + '">' + body.html() + '</textarea>');
 			container.append('<div class="chatter_update_actions"><button class="btn btn-success pull-right update_chatter_edit"  data-id="' + id + '"><i class="chatter-check"></i> Update Response</button><button href="/" class="btn btn-default pull-right cancel_chatter_edit" data-id="' + id + '">Cancel</button></div>');
-			
+
 			initializeNewEditor('post-edit-' + id);
 
 		});
