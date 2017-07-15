@@ -12,6 +12,6 @@ class ExampleTest extends TestCase
         $this->visit('/')
              ->see('Laravel');
         $this->visit('/forums')
-             ->see('New Discussion');
+             ->see('Welcome to Chatter');
     }
 }

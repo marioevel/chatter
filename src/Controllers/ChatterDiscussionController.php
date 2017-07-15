@@ -2,18 +2,25 @@
 
 namespace DevDojo\Chatter\Controllers;
 
-use Auth;
+use Sentinel;
 use Carbon\Carbon;
-use DevDojo\Chatter\Events\ChatterAfterNewDiscussion;
-use DevDojo\Chatter\Events\ChatterBeforeNewDiscussion;
 use DevDojo\Chatter\Models\Models;
-use Event;
 use Illuminate\Http\Request;
-use Illuminate\Routing\Controller as Controller;
+// use Illuminate\Routing\Controller as Controller;
+use App\Http\Controllers\Controller;
 use Validator;
 
 class ChatterDiscussionController extends Controller
 {
+    // public function __construct()
+    // {
+    //     view()->share('signedIn', Sentinel::check());
+    //     view()->share('user', Sentinel::getUser());
+    // }
+    public function __construct()
+    {
+        parent::__construct();
+    }
     /**
      * Display a listing of the resource.
      *
@@ -21,7 +28,7 @@ class ChatterDiscussionController extends Controller
      */
     public function index(Request $request)
     {
-        /*$total = 10;
+        $total = 10;
         $offset = 0;
         if ($request->total) {
             $total = $request->total;
@@ -29,11 +36,9 @@ class ChatterDiscussionController extends Controller
         if ($request->offset) {
             $offset = $request->offset;
         }
-        $discussions = Models::discussion()->with('user')->with('post')->with('postsCount')->with('category')->orderBy('created_at', 'ASC')->take($total)->offset($offset)->get();*/
+        $discussions = Models::discussion()->with('user')->with('post')->with('postsCount')->with('category')->orderBy('created_at', 'ASC')->take($total)->offset($offset)->get();
 
-        // Return an empty array to avoid exposing user data to the public.
-        // This index function is not being used anywhere.
-        return response()->json([]);
+        return response()->json($discussions);
     }
 
     /**
@@ -65,7 +70,6 @@ class ChatterDiscussionController extends Controller
             'chatter_category_id' => 'required',
         ]);
 
-        Event::fire(new ChatterBeforeNewDiscussion($request, $validator));
         if (function_exists('chatter_before_new_discussion')) {
             chatter_before_new_discussion($request, $validator);
         }
@@ -74,14 +78,14 @@ class ChatterDiscussionController extends Controller
             return back()->withErrors($validator)->withInput();
         }
 
-        $user_id = Auth::user()->id;
+        $user_id = Sentinel::getUser()->id;
 
         if (config('chatter.security.limit_time_between_posts')) {
             if ($this->notEnoughTimeBetweenDiscussion()) {
                 $minute_copy = (config('chatter.security.time_between_posts') == 1) ? ' minute' : ' minutes';
                 $chatter_alert = [
                     'chatter_alert_type' => 'danger',
-                    'chatter_alert'      => 'In order to prevent spam, please allow at least '.config('chatter.security.time_between_posts').$minute_copy.' in between submitting content.',
+                    'chatter_alert'      => 'In order to prevent spam, Please allow at least '.config('chatter.security.time_between_posts').$minute_copy.' inbetween submitting content.',
                     ];
 
                 return redirect('/'.config('chatter.routes.home'))->with($chatter_alert)->withInput();
@@ -125,40 +129,30 @@ class ChatterDiscussionController extends Controller
             'body'                  => $request->body,
             ];
 
-        if (config('chatter.editor') == 'simplemde'):
-           $new_post['markdown'] = 1;
-        endif;
-
-        // add the user to automatically be notified when new posts are submitted
-        $discussion->users()->attach($user_id);
-
         $post = Models::post()->create($new_post);
 
         if ($post->id) {
-            Event::fire(new ChatterAfterNewDiscussion($request));
             if (function_exists('chatter_after_new_discussion')) {
                 chatter_after_new_discussion($request);
             }
-
             $chatter_alert = [
                 'chatter_alert_type' => 'success',
-                'chatter_alert'      => 'Successfully created a new '.config('chatter.titles.discussion').'.',
+                'chatter_alert'      => 'Successfully created new '.config('chatter.titles.discussion').'.',
                 ];
-
-            return redirect('/'.config('chatter.routes.home').'/'.config('chatter.routes.discussion').'/'.$category->slug.'/'.$slug)->with($chatter_alert);
+            return redirect('/'.config('chatter.routes.home').'/'.$category->slug.'/'.$slug)->with($chatter_alert);
         } else {
             $chatter_alert = [
                 'chatter_alert_type' => 'danger',
                 'chatter_alert'      => 'Whoops :( There seems to be a problem creating your '.config('chatter.titles.discussion').'.',
                 ];
 
-            return redirect('/'.config('chatter.routes.home').'/'.config('chatter.routes.discussion').'/'.$category->slug.'/'.$slug)->with($chatter_alert);
+            return redirect('/'.config('chatter.routes.home').'/'.$category->slug.'/'.$slug)->with($chatter_alert);
         }
     }
 
     private function notEnoughTimeBetweenDiscussion()
     {
-        $user = Auth::user();
+        $user = Sentinel::getUser();
 
         $past = Carbon::now()->subMinutes(config('chatter.security.time_between_posts'));
 
@@ -185,24 +179,13 @@ class ChatterDiscussionController extends Controller
         }
 
         $discussion = Models::discussion()->where('slug', '=', $slug)->first();
-        if (is_null($discussion)) {
-            abort(404);
-        }
-
         $discussion_category = Models::category()->find($discussion->chatter_category_id);
         if ($category != $discussion_category->slug) {
-            return redirect(config('chatter.routes.home').'/'.config('chatter.routes.discussion').'/'.$discussion_category->slug.'/'.$discussion->slug);
+            return redirect(config('chatter.routes.home').'/'.$discussion_category->slug.'/'.$discussion->slug);
         }
         $posts = Models::post()->with('user')->where('chatter_discussion_id', '=', $discussion->id)->orderBy('created_at', 'ASC')->paginate(10);
 
-        $chatter_editor = config('chatter.editor');
-
-        if ($chatter_editor == 'simplemde') {
-            // Dynamically register markdown service provider
-            \App::register('GrahamCampbell\Markdown\MarkdownServiceProvider');
-        }
-
-        return view('chatter::discussion', compact('discussion', 'posts', 'chatter_editor'));
+        return view('chatter::discussion', compact('discussion', 'posts'));
     }
 
     /**
@@ -265,28 +248,6 @@ class ChatterDiscussionController extends Controller
         for ($nodeIdx = $nodeList->length; --$nodeIdx >= 0;) {
             $node = $nodeList->item($nodeIdx);
             $node->parentNode->removeChild($node);
-        }
-    }
-
-    public function toggleEmailNotification($category, $slug = null)
-    {
-        if (!isset($category) || !isset($slug)) {
-            return redirect(config('chatter.routes.home'));
-        }
-
-        $discussion = Models::discussion()->where('slug', '=', $slug)->first();
-
-        $user_id = Auth::user()->id;
-
-        // if it already exists, remove it
-        if ($discussion->users->contains($user_id)) {
-            $discussion->users()->detach($user_id);
-
-            return response()->json(0);
-        } else { // otherwise add it
-             $discussion->users()->attach($user_id);
-
-            return response()->json(1);
         }
     }
 }

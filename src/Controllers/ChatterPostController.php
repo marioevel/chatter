@@ -2,21 +2,25 @@
 
 namespace DevDojo\Chatter\Controllers;
 
-use Auth;
+use Sentinel;
 use Carbon\Carbon;
-use DevDojo\Chatter\Events\ChatterAfterNewResponse;
-use DevDojo\Chatter\Events\ChatterBeforeNewResponse;
-use DevDojo\Chatter\Mail\ChatterDiscussionUpdated;
 use DevDojo\Chatter\Models\Models;
-use Event;
 use Illuminate\Http\Request;
-use Illuminate\Routing\Controller as Controller;
-use Illuminate\Support\Facades\Mail;
-use Purifier;
+// use Illuminate\Routing\Controller as Controller;
+use App\Http\Controllers\Controller;
 use Validator;
 
 class ChatterPostController extends Controller
 {
+    // public function __construct()
+    // {
+    //     view()->share('signedIn', Sentinel::check());
+    //     view()->share('user', Sentinel::getUser());
+    // }
+    public function __construct()
+    {
+        parent::__construct();
+    }
     /**
      * Display a listing of the resource.
      *
@@ -24,7 +28,7 @@ class ChatterPostController extends Controller
      */
     public function index(Request $request)
     {
-        /*$total = 10;
+        $total = 10;
         $offset = 0;
         if ($request->total) {
             $total = $request->total;
@@ -32,11 +36,9 @@ class ChatterPostController extends Controller
         if ($request->offset) {
             $offset = $request->offset;
         }
-        $posts = Models::post()->with('user')->orderBy('created_at', 'DESC')->take($total)->offset($offset)->get();*/
+        $posts = Models::post()->with('user')->orderBy('created_at', 'DESC')->take($total)->offset($offset)->get();
 
-        // This is another unused route
-        // we return an empty array to not expose user data to the public
-        return response()->json([]);
+        return response()->json($posts);
     }
 
     /**
@@ -53,7 +55,6 @@ class ChatterPostController extends Controller
             'body' => 'required|min:10',
         ]);
 
-        Event::fire(new ChatterBeforeNewResponse($request, $validator));
         if (function_exists('chatter_before_new_response')) {
             chatter_before_new_response($request, $validator);
         }
@@ -67,19 +68,14 @@ class ChatterPostController extends Controller
                 $minute_copy = (config('chatter.security.time_between_posts') == 1) ? ' minute' : ' minutes';
                 $chatter_alert = [
                     'chatter_alert_type' => 'danger',
-                    'chatter_alert'      => 'In order to prevent spam, please allow at least '.config('chatter.security.time_between_posts').$minute_copy.' in between submitting content.',
+                    'chatter_alert'      => 'In order to prevent spam, Please allow at least '.config('chatter.security.time_between_posts').$minute_copy.' inbetween submitting content.',
                     ];
 
                 return back()->with($chatter_alert)->withInput();
             }
         }
 
-        $request->request->add(['user_id' => Auth::user()->id]);
-
-        if (config('chatter.editor') == 'simplemde'):
-            $request->request->add(['markdown' => 1]);
-        endif;
-
+        $request->request->add(['user_id' => Sentinel::getUser()->id]);
         $new_post = Models::post()->create($request->all());
 
         $discussion = Models::discussion()->find($request->chatter_discussion_id);
@@ -90,36 +86,28 @@ class ChatterPostController extends Controller
         }
 
         if ($new_post->id) {
-            Event::fire(new ChatterAfterNewResponse($request));
             if (function_exists('chatter_after_new_response')) {
                 chatter_after_new_response($request);
             }
-
-            // if email notifications are enabled
-            if (config('chatter.email.enabled')) {
-                // Send email notifications about new post
-                $this->sendEmailNotifications($new_post->discussion);
-            }
-
             $chatter_alert = [
                 'chatter_alert_type' => 'success',
                 'chatter_alert'      => 'Response successfully submitted to '.config('chatter.titles.discussion').'.',
                 ];
 
-            return redirect('/'.config('chatter.routes.home').'/'.config('chatter.routes.discussion').'/'.$category->slug.'/'.$discussion->slug)->with($chatter_alert);
+            return redirect('/'.config('chatter.routes.home').'/'.$category->slug.'/'.$discussion->slug)->with($chatter_alert);
         } else {
             $chatter_alert = [
                 'chatter_alert_type' => 'danger',
                 'chatter_alert'      => 'Sorry, there seems to have been a problem submitting your response.',
                 ];
 
-            return redirect('/'.config('chatter.routes.home').'/'.config('chatter.routes.discussion').'/'.$category->slug.'/'.$discussion->slug)->with($chatter_alert);
+            return redirect('/'.config('chatter.routes.home').'/'.$category->slug.'/'.$discussion->slug)->with($chatter_alert);
         }
     }
 
     private function notEnoughTimeBetweenPosts()
     {
-        $user = Auth::user();
+        $user = Sentinel::getUser();
 
         $past = Carbon::now()->subMinutes(config('chatter.security.time_between_posts'));
 
@@ -130,14 +118,6 @@ class ChatterPostController extends Controller
         }
 
         return false;
-    }
-
-    private function sendEmailNotifications($discussion)
-    {
-        $users = $discussion->users->except(Auth::user()->id);
-        foreach ($users as $user) {
-            Mail::to($user)->queue(new ChatterDiscussionUpdated($discussion));
-        }
     }
 
     /**
@@ -160,8 +140,8 @@ class ChatterPostController extends Controller
         }
 
         $post = Models::post()->find($id);
-        if (!Auth::guest() && (Auth::user()->id == $post->user_id)) {
-            $post->body = Purifier::clean($request->body);
+        if (!Auth::guest() && (Sentinel::getUser()->id == $post->user_id)) {
+            $post->body = $request->body;
             $post->save();
 
             $discussion = Models::discussion()->find($post->chatter_discussion_id);
@@ -212,7 +192,7 @@ class ChatterPostController extends Controller
 
             return redirect('/'.config('chatter.routes.home'))->with([
                 'chatter_alert_type' => 'success',
-                'chatter_alert'      => 'Successfully deleted the response and '.strtolower(config('chatter.titles.discussion')).'.',
+                'chatter_alert'      => 'Successfully deleted response and '.strtolower(config('chatter.titles.discussion')).'.',
             ]);
         }
 
@@ -222,7 +202,7 @@ class ChatterPostController extends Controller
 
         return redirect($url)->with([
             'chatter_alert_type' => 'success',
-            'chatter_alert'      => 'Successfully deleted the response from the '.config('chatter.titles.discussion').'.',
+            'chatter_alert'      => 'Successfully deleted response from the '.config('chatter.titles.discussion').'.',
         ]);
     }
 }

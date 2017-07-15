@@ -66,13 +66,13 @@ Route::group([
      */
     Route::group([
         'as'     => 'discussion.',
-        'prefix' => $route('discussion'),
+        'prefix' => $route('/'),
     ], function () use ($middleware, $authMiddleware) {
 
         // All discussions view.
         Route::get('/', [
             'as'         => 'index',
-            'uses'       => 'ChatterDiscussionController@index',
+            'uses'       => 'ChatterController@index',
             'middleware' => $middleware('discussion.index'),
         ]);
 
@@ -80,27 +80,18 @@ Route::group([
         Route::get('create', [
             'as'         => 'create',
             'uses'       => 'ChatterDiscussionController@create',
-            'middleware' => $authMiddleware('discussion.create'),
         ]);
 
         // Store discussion action.
         Route::post('/', [
             'as'         => 'store',
-            'uses'       => 'ChatterDiscussionController@store',
-            'middleware' => $authMiddleware('discussion.store'),
+            'uses'       => 'ChatterDiscussionController@store'
         ]);
 
         // Single discussion view.
         Route::get('{category}/{slug}', [
             'as'         => 'showInCategory',
             'uses'       => 'ChatterDiscussionController@show',
-            'middleware' => $middleware('discussion.show'),
-        ]);
-
-        // Add user notification to discussion
-        Route::post('{category}/{slug}/email', [
-            'as'         => 'email',
-            'uses'       => 'ChatterDiscussionController@toggleEmailNotification',
         ]);
 
         /*
@@ -114,28 +105,24 @@ Route::group([
             Route::get('/', [
                 'as'         => 'show',
                 'uses'       => 'ChatterDiscussionController@show',
-                'middleware' => $middleware('discussion.show'),
             ]);
 
             // Edit discussion view.
             Route::get('edit', [
                 'as'         => 'edit',
                 'uses'       => 'ChatterDiscussionController@edit',
-                'middleware' => $authMiddleware('discussion.edit'),
             ]);
 
             // Update discussion action.
             Route::match(['PUT', 'PATCH'], '/', [
                 'as'         => 'update',
                 'uses'       => 'ChatterDiscussionController@update',
-                'middleware' => $authMiddleware('discussion.update'),
             ]);
 
             // Destroy discussion action.
             Route::delete('/', [
                 'as'         => 'destroy',
                 'uses'       => 'ChatterDiscussionController@destroy',
-                'middleware' => $authMiddleware('discussion.destroy'),
             ]);
         });
     });
@@ -152,21 +139,18 @@ Route::group([
         Route::get('/', [
             'as'         => 'index',
             'uses'       => 'ChatterPostController@index',
-            'middleware' => $middleware('post.index'),
         ]);
 
         // Create post view.
         Route::get('create', [
             'as'         => 'create',
             'uses'       => 'ChatterPostController@create',
-            'middleware' => $authMiddleware('post.create'),
         ]);
 
         // Store post action.
         Route::post('/', [
             'as'         => 'store',
             'uses'       => 'ChatterPostController@store',
-            'middleware' => $authMiddleware('post.store'),
         ]);
 
         /*
@@ -187,21 +171,18 @@ Route::group([
             Route::get('edit', [
                 'as'         => 'edit',
                 'uses'       => 'ChatterPostController@edit',
-                'middleware' => $authMiddleware('post.edit'),
             ]);
 
             // Update post action.
             Route::match(['PUT', 'PATCH'], '/', [
                 'as'         => 'update',
                 'uses'       => 'ChatterPostController@update',
-                'middleware' => $authMiddleware('post.update'),
             ]);
 
             // Destroy post action.
             Route::delete('/', [
                 'as'         => 'destroy',
                 'uses'       => 'ChatterPostController@destroy',
-                'middleware' => $authMiddleware('post.destroy'),
             ]);
         });
     });

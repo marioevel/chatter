@@ -2,13 +2,21 @@
 
 namespace DevDojo\Chatter\Controllers;
 
-use Auth;
-use DevDojo\Chatter\Helpers\ChatterHelper as Helper;
+use Sentinel;
 use DevDojo\Chatter\Models\Models;
-use Illuminate\Routing\Controller as Controller;
-
+// use Illuminate\Routing\Controller as Controller;
+use App\Http\Controllers\Controller;
 class ChatterController extends Controller
 {
+    // public function __construct()
+    // {
+    //     view()->share('signedIn', Sentinel::check());
+    //     view()->share('user', Sentinel::getUser());
+    // }
+    public function __construct()
+    {
+        parent::__construct();
+    }
     public function index($slug = '')
     {
         $pagination_results = config('chatter.paginate.num_of_results');
@@ -21,31 +29,21 @@ class ChatterController extends Controller
             }
         }
 
-        $categories = Models::category()->get();
-        $categoriesMenu = Helper::categoriesMenu(array_filter($categories->toArray(), function ($item) {
-            return $item['parent_id'] === null;
-        }));
+        $categories = Models::category()->all();
 
-        $chatter_editor = config('chatter.editor');
-
-        if ($chatter_editor == 'simplemde') {
-            // Dynamically register markdown service provider
-            \App::register('GrahamCampbell\Markdown\MarkdownServiceProvider');
-        }
-
-        return view('chatter::home', compact('discussions', 'categories', 'categoriesMenu', 'chatter_editor'));
+        return view('chatter::home', compact('discussions', 'categories'));
     }
 
     public function login()
     {
-        if (!Auth::check()) {
+        if (!Sentinel::getUser()) {
             return \Redirect::to('/'.config('chatter.routes.login').'?redirect='.config('chatter.routes.home'))->with('flash_message', 'Please create an account before posting.');
         }
     }
 
     public function register()
     {
-        if (!Auth::check()) {
+        if (!Sentinel::getUser()) {
             return \Redirect::to('/'.config('chatter.routes.register').'?redirect='.config('chatter.routes.home'))->with('flash_message', 'Please register for an account.');
         }
     }

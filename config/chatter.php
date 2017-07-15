@@ -10,15 +10,15 @@ return [
     | Here you can specify the specific routes for the different sections of
     | your forum.
     |
-    */
+     */
 
     'routes' => [
-        'home'       => 'forums',
+        'home' => 'forums',
         'discussion' => 'discussion',
-        'category'   => 'category',
-        'post'       => 'posts',
-        'register'   => 'register',
-        'login'      => 'login',
+        'category' => 'category',
+        'post' => 'posts',
+        'register' => 'register',
+        'login' => '/login',
     ],
 
     /*
@@ -29,15 +29,14 @@ return [
     | These are some default titles (words) that will be used throughout your
     | forum. You can change these to whatever you would like :)
     |
-    */
+     */
 
     'titles' => [
-        'discussion'  => 'Discussion',
-        'discussions' => 'Discussions',
-        'category'    => 'Category',
+        'discussion' => 'Discussion',
+        'category' => 'Category',
     ],
 
-   /*
+    /*
     |--------------------------------------------------------------------------
     | The main headline and description of your forum
     |--------------------------------------------------------------------------
@@ -49,14 +48,11 @@ return [
     |
     |   *description*: This is the main description that will show under the
     |       headline on the forum homepage.
-    |   *headline_logo*: If this is set an image will be used on the forum home
-    |       instead of text. Specify the relative path to the image here.
     |
-    */
+     */
 
-    'headline'      => 'Welcome to Chatter',
-    'description'   => 'A simple forum package for your Laravel app.',
-    'headline_logo' => '/vendor/devdojo/chatter/assets/images/logo-light.png',
+    'headline' => 'Welcome to Chatter',
+    'description' => 'A simple forum package for your Laravel app.',
 
     /*
     |--------------------------------------------------------------------------
@@ -72,12 +68,12 @@ return [
     | include @yield('css').
     |
     | Next, before the ending body </body>, you will need to include the footer
-    | yield like so @yield('js')
+    | yeild like so @yield('js')
     |
-    */
+     */
 
     'yields' => [
-        'head'   => 'css',
+        'head' => 'css',
         'footer' => 'js',
     ],
 
@@ -86,25 +82,12 @@ return [
     | The master layout file for your site
     |--------------------------------------------------------------------------
     |
-    | By default Laravel's master file is the layouts.app file, but if your
+    | By default laravels master file is the layouts.app file, but if your
     | master layout file is somewhere else, you can specify it below
     |
-    */
+     */
 
     'master_file_extend' => 'layouts.app',
-
-    /*
-    |--------------------------------------------------------------------------
-    | Sidebar option in discussion view
-    |--------------------------------------------------------------------------
-    |
-    | By default the sidebar is only included in home.blade.php
-    | if you set the value to true, it will also be included in
-    | discussion.blade.php
-    |
-    */
-
-    'sidebar_in_discussion_view' => false,
 
     /*
     |--------------------------------------------------------------------------
@@ -118,7 +101,7 @@ return [
     |
     |   *database_field_with_user_name*: This is the database field that
     |       is used for the users 'Name', could be 'username', 'first_name'.
-    |       This will appear next to the user's avatar in discussions
+    |       This will appear next to the users avatar in disucssions
     |
     |   *relative_url_to_profile*: Users may want to click on another users
     |       image to view their profile. If a users profile page is at
@@ -141,14 +124,14 @@ return [
     |       empty if you want to keep the default color circles with
     |       users first initial.
     |
-    */
+     */
 
     'user' => [
-        'namespace'                     => 'App\User',
+        'namespace' => 'App\User',
         'database_field_with_user_name' => 'name',
-        'relative_url_to_profile'       => '',
-        'relative_url_to_image_assets'  => '',
-        'avatar_image_database_field'   => '',
+        'relative_url_to_profile' => '',
+        'relative_url_to_image_assets' => '',
+        'avatar_image_database_field' => '',
     ],
 
     /*
@@ -160,13 +143,13 @@ return [
     | they will get an alert message. Based on the alert message there is a
     | specific title message for every alert, which are defined below.
     |
-    */
+     */
 
     'alert_messages' => [
         'success' => 'Well done!',
-        'info'    => 'Heads Up!',
+        'info' => 'Heads Up!',
         'warning' => 'Wuh Oh!',
-        'danger'  => 'Oh Snap!',
+        'danger' => 'Oh Snap!',
     ],
 
     /*
@@ -184,31 +167,16 @@ return [
     |       being allowed to add more content. Only valid if above value is
     |       set to true.
     |
-    */
+     */
 
     'security' => [
         'limit_time_between_posts' => true, //
-        'time_between_posts'       => 1, // In minutes
+        'time_between_posts' => 1, // In minutes
     ],
 
     /*
     |--------------------------------------------------------------------------
-    | Chatter Editor
-    |--------------------------------------------------------------------------
-    |
-    | You may wish to choose between a couple different editors. At the moment
-    | The following editors are supported:
-    |   - tinymce    (https://www.tinymce.com/)
-    |   - simplemde  (https://simplemde.com/)
-    |   - trumbowyg  (https://alex-d.github.io/Trumbowyg/) - requires jQuery >= 1.8
-    |
-    */
-
-    'editor' => 'tinymce',
-
-    /*
-    |--------------------------------------------------------------------------
-    | TinyMCE WYSIWYG Editor Options (Must be the selected editor)
+    | TinyMCE WYSIWYG Editor
     |--------------------------------------------------------------------------
     |
     | Select which tools you want to appear in the tinymce editor toolbar.
@@ -223,28 +191,11 @@ return [
     |       'core' you do not need to include a plugin in order to use it
     |       in the toolbar.
     |
-    */
+     */
 
     'tinymce' => [
         'toolbar' => 'bold italic underline | alignleft aligncenter alignright | bullist numlist outdent indent | link image',
         'plugins' => 'link, image',
-    ],
-
-    /*
-    |--------------------------------------------------------------------------
-    | Email Notification Settings
-    |--------------------------------------------------------------------------
-    |
-    | The following are settings that you can use to modify the email settings
-    |   - enabled (if you would like to enable or disable email notifications)
-    |   - view (the email view sent) $discussion var is passed to view
-    |   -
-    |
-    */
-
-    'email' => [
-        'enabled' => false,
-        'view'    => 'chatter::email',
     ],
 
     /*
@@ -255,7 +206,7 @@ return [
     | These are the pagination settings for your forum. Specify how many number
     | of results you want to show per page.
     |
-    */
+     */
 
     'paginate' => [
         'num_of_results' => 10,
@@ -273,28 +224,28 @@ return [
     | Authentication is enforced on create, store, edit, update, destroy routes,
     | no need to add 'auth' to these routes.
     |
-    */
+     */
 
     'middleware' => [
-        'global'     => ['web'],
-        'home'       => [],
+        'global' => ['web'],
+        'home' => [],
         'discussion' => [
-            'index'   => [],
-            'show'    => [],
-            'create'  => [],
-            'store'   => [],
+            'index' => [],
+            'show' => [],
+            'create' => [],
+            'store' => [],
             'destroy' => [],
-            'edit'    => [],
-            'update'  => [],
+            'edit' => [],
+            'update' => [],
         ],
         'post' => [
-            'index'   => [],
-            'show'    => [],
-            'create'  => [],
-            'store'   => [],
+            'index' => [],
+            'show' => [],
+            'create' => [],
+            'store' => [],
             'destroy' => [],
-            'edit'    => [],
-            'update'  => [],
+            'edit' => [],
+            'update' => [],
         ],
         'category' => [
             'show' => [],
