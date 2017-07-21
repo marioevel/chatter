@@ -5,6 +5,10 @@
 	<link href="/vendor/devdojo/chatter/assets/css/chatter.css" rel="stylesheet">
 @stop
 
+@section('title')
+	Nu Image Medical Forums
+@stop
+
 @section('content')
 
 <div id="chatter" class="chatter_home">

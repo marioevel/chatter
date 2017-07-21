@@ -4,7 +4,7 @@
 	<link href="/vendor/devdojo/chatter/assets/css/chatter.css" rel="stylesheet">
 @stop
 @section('title')
-	{{ $discussion->title }}
+	{{ $discussion->title }} | Nu Image Medical Forum
 @stop
 
 @section('content')
